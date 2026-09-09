@@ -216,3 +216,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# Python virtual environment
+.venv/
+
+# Local SQLite database
+*.db
+
+# Python cache
+__pycache__/
+*.pyc
