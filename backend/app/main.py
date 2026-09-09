@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database.database import Base, engine, SessionLocal
 from app.models.security_event_db import SecurityEventDB
 from app.models.security_event import SecurityEvent
+from app.detection.brute_force import detect_brute_force
 
 Base.metadata.create_all(bind=engine)
 
@@ -40,9 +41,14 @@ def create_event(event: SecurityEvent, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_event)
 
+    recent_events = db.query(SecurityEventDB).all()
+
+    alerts = detect_brute_force(recent_events)
+
     return {
         "message": "Security event stored successfully",
-        "event_id": db_event.id
+        "event_id": db_event.id,
+        "alerts": alerts
     }
 
 
