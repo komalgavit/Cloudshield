@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 
 from app.database.database import Base, engine, SessionLocal
+from app.models.alert import Alert
 from app.models.security_event_db import SecurityEventDB
 from app.models.security_event import SecurityEvent
 from app.detection.brute_force import detect_brute_force
