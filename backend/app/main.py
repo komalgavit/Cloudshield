@@ -46,6 +46,31 @@ def create_event(event: SecurityEvent, db: Session = Depends(get_db)):
 
     alerts = detect_brute_force(recent_events)
 
+    for alert in alerts:
+        existing_alert = (
+            db.query(Alert)
+            .filter(
+                Alert.alert_type == alert["type"],
+                Alert.source_ip == alert["source_ip"],
+                Alert.status == "open",
+            )
+            .first()
+        )
+
+        if existing_alert is None:
+            db.add(
+                Alert(
+                    timestamp=event.timestamp,
+                    alert_type=alert["type"],
+                    severity=alert["severity"],
+                    source_ip=alert["source_ip"],
+                    attempts=alert["attempts"],
+                    description=alert["description"],
+                )
+            )
+
+    db.commit()
+
     return {
         "message": "Security event stored successfully",
         "event_id": db_event.id,
@@ -59,3 +84,9 @@ def get_events(db: Session = Depends(get_db)):
     events = db.query(SecurityEventDB).all()
 
     return events
+
+
+@app.get("/alerts")
+def get_alerts(db: Session = Depends(get_db)):
+    """Return saved alerts with the newest alerts first."""
+    return db.query(Alert).order_by(Alert.timestamp.desc()).all()
