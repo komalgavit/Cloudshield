@@ -6,6 +6,8 @@ from app.models.alert import Alert
 from app.models.security_event_db import SecurityEventDB
 from app.models.security_event import SecurityEvent
 from app.detection.brute_force import detect_brute_force
+from app.models.incident import Incident
+from app.models.incident_schema import IncidentCreate
 
 Base.metadata.create_all(bind=engine)
 
@@ -90,3 +92,26 @@ def get_events(db: Session = Depends(get_db)):
 def get_alerts(db: Session = Depends(get_db)):
     """Return saved alerts with the newest alerts first."""
     return db.query(Alert).order_by(Alert.timestamp.desc()).all()
+
+@app.post("/incidents")
+def create_incident(
+    incident: IncidentCreate,
+    db: Session = Depends(get_db)
+):
+    db_incident = Incident(
+        title=incident.title,
+        description=incident.description,
+        severity=incident.severity,
+        status=incident.status,
+        source_ip=incident.source_ip
+    )
+
+    db.add(db_incident)
+    db.commit()
+    db.refresh(db_incident)
+
+    return db_incident
+
+@app.get("/incidents")
+def get_incidents(db: Session = Depends(get_db)):
+    return db.query(Incident).order_by(Incident.created_at.desc()).all()
